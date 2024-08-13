@@ -19,7 +19,6 @@ const slice = createSlice({
         state.items.push(action.payload);
       })
       .addCase(deleteContact.fulfilled, (state, action) => {
-        console.log('Deleted ID:', action.payload);
         state.items = state.items.filter((item) => item.id !== action.payload);
       })
       .addMatcher(
