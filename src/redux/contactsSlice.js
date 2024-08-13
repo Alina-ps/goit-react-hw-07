@@ -1,4 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, isAnyOf } from '@reduxjs/toolkit';
+import { deleteContact, fetchContacts, addContact } from './contactsOps';
 
 const initialState = {
   items: [],
@@ -9,30 +10,51 @@ const initialState = {
 const slice = createSlice({
   name: 'contacts',
   initialState,
-  reducers: {
-    setLoadingStatus: (state, action) => {
-      state.loading = action.payload;
-    },
-    setErrorStatus: (state, action) => {
-      state.error = action.payload;
-    },
-    fetchData: (state, action) => {
-      state.items = action.payload;
-    },
-    addContact: (state, action) => {
-      state.items.push(action.payload);
-    },
-    deleteContact: (state, action) => {
-      state.items = state.items.filter((item) => item.id !== action.payload);
-    },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchContacts.fulfilled, (state, action) => {
+        state.items = action.payload;
+      })
+      .addCase(addContact.fulfilled, (state, action) => {
+        state.items.push(action.payload);
+      })
+      .addCase(deleteContact.fulfilled, (state, action) => {
+        console.log('Deleted ID:', action.payload);
+        state.items = state.items.filter((item) => item.id !== action.payload);
+      })
+      .addMatcher(
+        isAnyOf(
+          fetchContacts.pending,
+          addContact.pending,
+          deleteContact.pending
+        ),
+        (state) => {
+          state.loading = true;
+          state.error = false;
+        }
+      )
+      .addMatcher(
+        isAnyOf(
+          fetchContacts.rejected,
+          addContact.rejected,
+          deleteContact.rejected
+        ),
+        (state) => {
+          state.loading = false;
+          state.error = true;
+        }
+      )
+      .addMatcher(
+        isAnyOf(
+          fetchContacts.fulfilled,
+          addContact.fulfilled,
+          deleteContact.fulfilled
+        ),
+        (state) => {
+          state.loading = false;
+        }
+      );
   },
 });
 
 export const contactsReducer = slice.reducer;
-export const {
-  addContact,
-  deleteContact,
-  setLoadingStatus,
-  setErrorStatus,
-  fetchData,
-} = slice.actions;
